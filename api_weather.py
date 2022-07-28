@@ -1,11 +1,14 @@
 import requests
 from parse import API_TOKEN_WEATHER
 
-print(API_TOKEN_WEATHER)
+
+lat = '53.1950306'
+lon = '50.1069518'
 
 
 def get_weather():
-    url = 'https://api.weather.yandex.ru/v2/forecast?lat=55.75396&lon=37.620393&extra=false&lang=ru_RU'
+    url = 'https://api.weather.yandex.ru/v2/forecast?lat=' + \
+        lat+'&lon='+lon+'&extra=false&lang=ru_RU'
     header = {'X-Yandex-API-Key': API_TOKEN_WEATHER}
     r = requests.get(url, headers=header)
     the_weather = r.json()
@@ -14,6 +17,5 @@ def get_weather():
 
 
 print(get_weather()['info']['tzinfo']['name'])
-print(get_weather()['geo_object']['district']['name'])
-
 print(get_weather()['fact']['temp'])
+print(get_weather()['geo_object'])
