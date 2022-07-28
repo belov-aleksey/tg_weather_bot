@@ -5,7 +5,7 @@ import json
 def load_cities():
     '''Load all cities from /city/city.json to list citiesList'''
 
-    os.chdir("C:\\D\\Programming\\Python\\testing_27_07_22\\city")
+    os.chdir("C:\\D\\Programming\\Python\\testing_27_07_22")
     with open('city.json', encoding='utf-8') as f:
         file_content = f.read()
         citiesList = json.loads(file_content)
