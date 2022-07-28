@@ -1,6 +1,8 @@
 import requests
 from parse import API_TOKEN_WEATHER
 
+print(API_TOKEN_WEATHER)
+
 
 def get_weather():
     url = 'https://api.weather.yandex.ru/v2/forecast?lat=55.75396&lon=37.620393&extra=false&lang=ru_RU'
