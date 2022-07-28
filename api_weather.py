@@ -1,9 +1,12 @@
 import requests
 from parse import API_TOKEN_WEATHER
 
+from city import getCityCoordinate
 
-lat = '53.1950306'
-lon = '50.1069518'
+lat, lon = getCityCoordinate('Санкт-Петербург')
+
+'''lat = '53.1950306'
+lon = '50.1069518'''
 
 
 def get_weather():
