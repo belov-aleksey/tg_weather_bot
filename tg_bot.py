@@ -5,14 +5,19 @@ from telegram.ext import filters, MessageHandler
 
 from parse import API_TOKEN_TG
 
+from api_weather import get_weather
+
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 
 
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=update.message.text)
+async def weather(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    city, temperature = get_weather(update.message.text)
+    textMessage = ('По данным Яндекс.Погода  в ' + city +
+                   '\n температура: ' + str(temperature))
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=textMessage)
 
 
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -20,17 +25,19 @@ async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=update.effective_chat.id, text="I'm a bot, please talk to me!")
+    await context.bot.send_message(chat_id=update.effective_chat.id, text="Привет! Напиши мне название города,\
+     в котором хочшеь узнать погоду. \n Пример: Москва")
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(API_TOKEN_TG).build()
 
     start_handler = CommandHandler('start', start)
-    echo_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), echo)
+    weather_handler = MessageHandler(
+        filters.TEXT & (~filters.COMMAND), weather)
     unknown_handler = MessageHandler(filters.COMMAND, unknown)
 
     application.add_handler(start_handler)
-    application.add_handler(echo_handler)
+    application.add_handler(weather_handler)
     application.add_handler(unknown_handler)
 
     application.run_polling()
