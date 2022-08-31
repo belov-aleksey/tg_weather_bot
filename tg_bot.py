@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
 from telegram.ext import filters, MessageHandler
@@ -14,8 +15,8 @@ logging.basicConfig(
 
 
 async def weather(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    city, temperature = get_weather(update.message.text)
-    textMessage = ('По данным Яндекс.Погода  в ' + city +
+    temperature = get_weather(update.message.text)
+    textMessage = ('По данным Яндекс.Погода  в ' + update.message.text +
                    '\n температура: ' + str(temperature))
     await context.bot.send_message(chat_id=update.effective_chat.id, text=textMessage)
 
@@ -26,7 +27,7 @@ async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Привет! Напиши мне название города,\
-     в котором хочшеь узнать погоду. \n Пример: Москва")
+     в котором хочешь узнать погоду. \n Пример: Москва")
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(API_TOKEN_TG).build()
