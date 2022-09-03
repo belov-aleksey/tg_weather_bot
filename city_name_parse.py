@@ -13,10 +13,9 @@ def load_cities():
 
 
 def getCityCoordinate(cityName: str):
-    '''return (lat,lon) or -1'''
+    '''return (lat,lon) or (None, None)'''
     citiesList = load_cities()
     for city in citiesList:
         if city['city'] == cityName:
             return str(city['geo_lat']), str(city['geo_lon'])
-    print("City is not found")
-    return -1
+    return None, None

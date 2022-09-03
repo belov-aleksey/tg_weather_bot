@@ -1,10 +1,10 @@
 import logging
-import asyncio
+
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
 from telegram.ext import filters, MessageHandler
 
-from parse import API_TOKEN_TG
+from token_parse import API_TOKEN_TG
 
 from api_weather import get_weather
 
@@ -16,8 +16,13 @@ logging.basicConfig(
 
 async def weather(update: Update, context: ContextTypes.DEFAULT_TYPE):
     temperature = get_weather(update.message.text)
-    textMessage = ('По данным Яндекс.Погода  в ' + update.message.text +
-                   '\n температура: ' + str(temperature))
+    if temperature:
+        textMessage = ('По данным Яндекс.Погода в ' + update.message.text +
+                       '\n температура: ' + str(temperature))
+    else:
+        textMessage = ('Информации о погоде в этом городе нет.' +
+                       'Проверьте правильность написания названия города' +
+                       ' и повторите попытку снова. Например: Нижний Новгород')
     await context.bot.send_message(chat_id=update.effective_chat.id, text=textMessage)
 
 

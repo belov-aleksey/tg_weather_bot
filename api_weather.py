@@ -1,7 +1,8 @@
 import requests
-from parse import API_TOKEN_WEATHER
 
-from city import getCityCoordinate
+from token_parse import API_TOKEN_WEATHER
+
+from city_name_parse import getCityCoordinate
 
 
 def get_weather_from_server(lat: str, lon: str):
@@ -20,6 +21,9 @@ def get_temperature(weather: dict):
 
 def get_weather(city_name: str):
     lat, lon = getCityCoordinate(city_name)
-    weather = get_weather_from_server(lat, lon)
-    temperature = get_temperature(weather)
-    return temperature
+    if lat and lon:
+        weather = get_weather_from_server(lat, lon)
+        temperature = get_temperature(weather)
+        return temperature
+    else:
+        return None
