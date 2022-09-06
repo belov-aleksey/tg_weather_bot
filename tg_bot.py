@@ -6,7 +6,7 @@ from telegram.ext import filters, MessageHandler
 
 from token_parse import API_TOKEN_TG
 
-from api_weather import get_weather
+from api_weather import get_fact_weather
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -14,15 +14,8 @@ logging.basicConfig(
 )
 
 
-async def weather(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    temperature = get_weather(update.message.text)
-    if temperature:
-        textMessage = ('По данным Яндекс.Погода в ' + update.message.text +
-                       '\n температура: ' + str(temperature))
-    else:
-        textMessage = ('Информации о погоде в этом городе нет.' +
-                       'Проверьте правильность написания названия города' +
-                       ' и повторите попытку снова. Например: Нижний Новгород')
+async def fact_weather(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    textMessage = get_fact_weather(update.message.text)
     await context.bot.send_message(chat_id=update.effective_chat.id, text=textMessage)
 
 
@@ -39,7 +32,7 @@ if __name__ == '__main__':
 
     start_handler = CommandHandler('start', start)
     weather_handler = MessageHandler(
-        filters.TEXT & (~filters.COMMAND), weather)
+        filters.TEXT & (~filters.COMMAND), fact_weather)
     unknown_handler = MessageHandler(filters.COMMAND, unknown)
 
     application.add_handler(start_handler)
