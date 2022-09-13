@@ -1,4 +1,4 @@
-import logging
+#import logging
 
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
@@ -8,10 +8,10 @@ from token_parse import API_TOKEN_TG
 
 from api_weather import get_fact_weather
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
+# logging.basicConfig(
+#format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+# level=logging.INFO
+# )
 
 
 async def fact_weather(update: Update, context: ContextTypes.DEFAULT_TYPE):
