@@ -6,12 +6,7 @@ from telegram.ext import filters, MessageHandler
 
 from token_parse import API_TOKEN_TG
 
-from api_weather import get_fact_weather
-
-# logging.basicConfig(
-#format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-# level=logging.INFO
-# )
+from api_weather import get_fact_weather, get_forecast_weather
 
 
 async def fact_weather(update: Update, context: ContextTypes.DEFAULT_TYPE):

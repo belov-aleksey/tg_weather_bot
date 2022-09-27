@@ -1,8 +1,10 @@
+# Get weather's data from Yandex Weather API
+
 import requests
 
-from token_parse import API_TOKEN_WEATHER
+from token_parse import API_TOKEN_WEATHER  # yandex weather token
 
-from city_name_parse import getCityCoordinate
+from city_name_parse import getCityCoordinate  # (lan. lon) -> city name
 
 ru_cond = {
     'clear': 'ясно',
@@ -36,6 +38,7 @@ ru_part_name = {
 
 
 def get_weather_from_server(lat: str, lon: str) -> dict:
+    "return weather json"
     url = 'https://api.weather.yandex.ru/v2/informers?lat=' + \
         lat+'&lon='+lon+'&extra=true&lang=ru_RU'
     # url = 'https://api.weather.yandex.ru/v2/informers?lat=55.75396&lon=37.620393&extra=true'
@@ -110,10 +113,3 @@ def get_forecast_weather(city_name: str) -> str:
         Проверьте правильность написания названия города
         и повторите попытку снова. Например: Нижний Новгород"""
         return ans
-
-
-# print(getCityCoordinate("Самара"))
-#w = get_weather_from_server('53', '50')
-# print(get_fact_weather('Самара'))
-# print(get_forecast_weather('Самара'))
-# print('')
