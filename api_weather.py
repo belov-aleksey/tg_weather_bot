@@ -1,12 +1,15 @@
-# Get weather's data from Yandex Weather API
+'''
+Получение данных о погоде по API от Яндекс-Погода
+'''
 
 import requests
 
 from token_parse import API_TOKEN_WEATHER  # yandex weather token
 
-from city_name_parse import getCityCoordinate  # (lan. lon) -> city name
+from city_name_parse import get_city_coordinate  # (lan. lon) -> city name
 
-ru_cond = {
+
+RU_CONDITION = {
     'clear': 'ясно',
     'partly-cloudy': 'малооблачно',
     'cloudy': 'облачно с прояснениями',
@@ -28,8 +31,7 @@ ru_cond = {
     'thunderstorm-with-hail': 'гроза с градом'
 }
 
-
-ru_part_name = {
+RU_PART_NAME = {
     "night": "ночь",
     "day": "день",
     "evening": "вечер",
@@ -38,78 +40,79 @@ ru_part_name = {
 
 
 def get_weather_from_server(lat: str, lon: str) -> dict:
-    "return weather json"
-    url = 'https://api.weather.yandex.ru/v2/informers?lat=' + \
-        lat+'&lon='+lon+'&extra=true&lang=ru_RU'
-    # url = 'https://api.weather.yandex.ru/v2/informers?lat=55.75396&lon=37.620393&extra=true'
+    '''
+    Возвращает данные о погоде в словаре weather
+    '''
+    url = f'https://api.weather.yandex.ru/v2/informers?lat={lat}&lon={lon}&extra=true&lang=ru_RU'
     header = {'X-Yandex-API-Key': API_TOKEN_WEATHER}
     r = requests.get(url, headers=header)
     weather = r.json()
     return weather
 
 
-def get_fact_temp(weather: dict) -> str:
-    return str(weather['fact']['temp'])
+def get_tempereture(weather:dict) -> (str, str):
+    '''
+    Возвращает значение температуры 
+    fact_temperature - температура воздуха в настоящее время
+    forecast_temperature - прогноз температуры погоды в ближайшее время
+    '''
+    fact_tempeture = str(weather['fact']['temp'])
+    forecast_tempeture = str(weather['forecast']['parts'][0]['temp_avg'])
+    return fact_tempeture, forecast_tempeture
 
 
-def get_fact_condition(weather: dict) -> str:
-    return ru_cond[weather['fact']['condition']]
+def get_condition(weather: dict) -> (str, str):
+    '''
+    Возвращает значение температуры 
+    fact_temperature - температура воздуха в настоящее время
+    forecast_temperature - прогноз температуры погоды в ближайшее время
+    '''
+    fact_condition = RU_CONDITION[weather['fact']['condition']]
+    forecast_condition = RU_CONDITION[weather['forecast']['parts'][0]['condition']]
+    return fact_condition, forecast_condition
 
 
-def get_fact_wind_speed(weather: dict) -> str:
-    return str(weather['fact']['wind_speed'])
+def get_wind_speed(weather: dict) -> (str, str):
+    '''
+    Возвращает значение скорости ветра
+    fact_wind - скорость ветра в настоящее время
+    forecast_wind - прогноз скорости ветра в ближайшее время
+    '''    
+    fact_wind = str(weather['fact']['wind_speed'])
+    forecast_wind = str(weather['forecast']['parts'][0]['wind_speed'])
+    return fact_wind, forecast_wind
 
 
 def get_forecast_part_name(weather: dict) -> str:
-    return ru_part_name[weather['forecast']['parts'][1]['part_name']]
+    '''
+    Возвращает строку с названием предстоящего времени суток (утро, день, вечер, ночь)
+    '''
+    return RU_PART_NAME[weather['forecast']['parts'][0]['part_name']]
 
 
-def get_forecast_temp(weather: dict) -> str:
-    return str(weather['forecast']['parts'][0]['temp_avg'])
-
-
-def get_forecast_condition(weather: dict) -> str:
-    return ru_cond[weather['forecast']['parts'][0]['condition']]
-
-
-def get_forecast_wind(weather: dict) -> str:
-    return weather['forecast']['parts'][0]['wind_speed']
-
-
-def get_fact_weather(city_name: str) -> str:
-    lat, lon = getCityCoordinate(city_name)
+def get_weather(city_name:str) -> str:
+    '''
+    Формирует ответ пользователю. Если данные о погоде по введеному названию городу получены,
+    то возвращается строка с данными о текущей погоде и прогнозе погоде. Если данных нет,
+    то возращается строка с текстом об ошибке
+    '''
+    lat, lon = get_city_coordinate(city_name)
     if lat and lon:
         weather = get_weather_from_server(lat, lon)
-        temp = get_fact_temp(weather)
-        cond = get_fact_condition(weather)
-        wind = get_fact_wind_speed(weather)
-        ans = city_name + "\nПо данным Яндекс.Погода\n"\
-            + "Температура воздуха: " + temp + ", " + cond + "\n"\
-            + "Скорость ветра: " + wind
-        return ans
+        fact_temperature, forecast_temperature = get_tempereture(weather)
+        fact_wind, forecast_wind = get_wind_speed(weather)
+        fact_condition, forecast_condition = get_condition(weather)
+        forecast_part_name = get_forecast_part_name(weather)
+        answer = f'Город: {city_name.capitalize()}. По данным Яндекс-Погода: \n\n' \
+                f'Температура воздуха: {fact_temperature}, {fact_condition}\n' \
+                f'Скорость ветра: {fact_wind} \n\n'\
+                '----------------\n\n' \
+                f'Прогноз погоды на {forecast_part_name}:\n' \
+                f'Температура воздуха: {forecast_temperature}, {forecast_condition}\n' \
+                f'Скорость ветра: {forecast_wind}'        
+        return answer
     else:
-        ans = """Информации о погоде в этом городе нет.
-        Проверьте правильность написания названия города
-        и повторите попытку снова. Например: Нижний Новгород"""
-        return ans
-
-
-def get_forecast_weather(city_name: str) -> str:
-    lat, lon = getCityCoordinate(city_name)
-    if lat and lon:
-        weather = get_weather_from_server(lat, lon)
-        part_name = get_forecast_part_name(weather)
-        temp = get_forecast_temp(weather)
-        cond = get_forecast_condition(weather)
-        wind = get_fact_wind_speed(weather)
-        ans = "Прогноз по данным Яндекс.Погода\n"\
-            + "Город: " + city_name + "\n"\
-            + "Время суток: " + part_name + "\n"\
-            + "Температура воздуха: " + temp + ", " + cond + "\n"\
-            + "Скорость ветра: " + wind
-        return ans
-    else:
-        ans = """Информации о погоде в этом городе нет.
-        Проверьте правильность написания названия города
-        и повторите попытку снова. Например: Нижний Новгород"""
-        return ans
+        ans = 'Информации о погоде в этом городе нет. \n\n' \
+        'Проверьте правильность написания названия города '\
+        'и повторите попытку снова. Например: Нижний Новгород'
+        return ans        
