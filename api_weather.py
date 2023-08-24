@@ -1,8 +1,7 @@
 '''
 Получение данных о погоде по API от Яндекс-Погода
-'''
 
-import requests
+'''
 
 from aiohttp import ClientSession
 
@@ -43,6 +42,7 @@ RU_PART_NAME = {
 async def get_weather_from_server(lat: str, lon: str) -> dict:
     '''
     Возвращает данные о погоде в словаре weather
+
     '''
     url = f'https://api.weather.yandex.ru/v2/informers?lat={lat}&lon={lon}&extra=true&lang=ru_RU'
     header = {'X-Yandex-API-Key': API_TOKEN_WEATHER}
@@ -57,6 +57,7 @@ def get_tempereture(weather:dict) -> (str, str):
     Возвращает значение температуры 
     fact_temperature - температура воздуха в настоящее время
     forecast_temperature - прогноз температуры погоды в ближайшее время
+
     '''
     fact_tempeture = str(weather['fact']['temp'])
     forecast_tempeture = str(weather['forecast']['parts'][0]['temp_avg'])
@@ -68,6 +69,7 @@ def get_condition(weather: dict) -> (str, str):
     Возвращает значение температуры 
     fact_temperature - температура воздуха в настоящее время
     forecast_temperature - прогноз температуры погоды в ближайшее время
+
     '''
     fact_condition = RU_CONDITION[weather['fact']['condition']]
     forecast_condition = RU_CONDITION[weather['forecast']['parts'][0]['condition']]
@@ -79,6 +81,7 @@ def get_wind_speed(weather: dict) -> (str, str):
     Возвращает значение скорости ветра
     fact_wind - скорость ветра в настоящее время
     forecast_wind - прогноз скорости ветра в ближайшее время
+
     '''    
     fact_wind = str(weather['fact']['wind_speed'])
     forecast_wind = str(weather['forecast']['parts'][0]['wind_speed'])
@@ -88,6 +91,7 @@ def get_wind_speed(weather: dict) -> (str, str):
 def get_forecast_part_name(weather: dict) -> str:
     '''
     Возвращает строку с названием предстоящего времени суток (утро, день, вечер, ночь)
+
     '''
     return RU_PART_NAME[weather['forecast']['parts'][0]['part_name']]
 
@@ -97,6 +101,7 @@ async def get_weather(city_name:str) -> str:
     Формирует ответ пользователю. Если данные о погоде по введеному названию городу получены,
     то возвращается строка с данными о текущей погоде и прогнозе погоде. Если данных нет,
     то возращается строка с текстом об ошибке
+    
     '''
     lat, lon = get_city_coordinate(city_name)
     if lat and lon:
