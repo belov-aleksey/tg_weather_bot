@@ -11,7 +11,7 @@ from api_weather import get_weather
 
 
 async def weather(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    textMessage = get_weather(update.message.text)
+    textMessage = await get_weather(update.message.text)
     await context.bot.send_message(chat_id=update.effective_chat.id, text=textMessage)
 
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):

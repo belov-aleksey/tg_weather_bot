@@ -4,9 +4,10 @@
 
 import requests
 
-from token_parse import API_TOKEN_WEATHER  # yandex weather token
+from aiohttp import ClientSession
 
-from city_name_parse import get_city_coordinate  # (lan. lon) -> city name
+from token_parse import API_TOKEN_WEATHER  # Загрузка токена для запроса по API к Яндекс-Погода
+from city_name_parse import get_city_coordinate 
 
 
 RU_CONDITION = {
@@ -39,14 +40,15 @@ RU_PART_NAME = {
 }
 
 
-def get_weather_from_server(lat: str, lon: str) -> dict:
+async def get_weather_from_server(lat: str, lon: str) -> dict:
     '''
     Возвращает данные о погоде в словаре weather
     '''
     url = f'https://api.weather.yandex.ru/v2/informers?lat={lat}&lon={lon}&extra=true&lang=ru_RU'
     header = {'X-Yandex-API-Key': API_TOKEN_WEATHER}
-    r = requests.get(url, headers=header)
-    weather = r.json()
+    async with ClientSession() as session:
+        async with session.get(url, headers=header) as response:
+            weather = await response.json()
     return weather
 
 
@@ -90,7 +92,7 @@ def get_forecast_part_name(weather: dict) -> str:
     return RU_PART_NAME[weather['forecast']['parts'][0]['part_name']]
 
 
-def get_weather(city_name:str) -> str:
+async def get_weather(city_name:str) -> str:
     '''
     Формирует ответ пользователю. Если данные о погоде по введеному названию городу получены,
     то возвращается строка с данными о текущей погоде и прогнозе погоде. Если данных нет,
@@ -98,7 +100,7 @@ def get_weather(city_name:str) -> str:
     '''
     lat, lon = get_city_coordinate(city_name)
     if lat and lon:
-        weather = get_weather_from_server(lat, lon)
+        weather = await get_weather_from_server(lat, lon)
         fact_temperature, forecast_temperature = get_tempereture(weather)
         fact_wind, forecast_wind = get_wind_speed(weather)
         fact_condition, forecast_condition = get_condition(weather)
