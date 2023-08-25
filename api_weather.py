@@ -16,6 +16,14 @@ class Temperature(NamedTuple):
     fact_temperature: int
     forecast_temperature: int
 
+class Condition(NamedTuple):
+    fact_condition: str
+    forecast_condition: str
+
+class WindSpeed(NamedTuple):
+    fact_wind_speed: float
+    forecast_wind_speed: float
+
 RU_CONDITION = {
     'clear': 'ясно',
     'partly-cloudy': 'малооблачно',
@@ -51,9 +59,7 @@ async def get_weather_from_server(Coordinates) -> dict:
     Возвращает данные о погоде в словаре weather
 
     """
-    lat = str(Coordinates.latitude)
-    lon = str(Coordinates.longitude)
-    url = f'https://api.weather.yandex.ru/v2/informers?lat={lat}&lon={lon}&extra=true&lang=ru_RU'
+    url = f'https://api.weather.yandex.ru/v2/informers?lat={Coordinates.latitude}&lon={Coordinates.longitude}&extra=true&lang=ru_RU'
     headers = {'X-Yandex-API-Key': API_TOKEN_WEATHER}
     async with ClientSession() as session:
         async with session.get(url, headers=headers) as response:
@@ -72,10 +78,10 @@ def get_tempereture(weather:dict) -> Temperature:
     """
     fact_temperature = weather['fact']['temp']
     forecast_temperature = weather['forecast']['parts'][0]['temp_avg']
-    return Temperature(fact_temperature=fact_temperature, forecast_temperature=forecast_temperature)
+    return Temperature(fact_temperature, forecast_temperature)
 
 
-def get_condition(weather: dict) -> (str, str):
+def get_condition(weather: dict) -> Condition:
     """
     Возвращает значение температуры 
     fact_temperature - температура воздуха в настоящее время
@@ -84,19 +90,19 @@ def get_condition(weather: dict) -> (str, str):
     """
     fact_condition = RU_CONDITION[weather['fact']['condition']]
     forecast_condition = RU_CONDITION[weather['forecast']['parts'][0]['condition']]
-    return fact_condition, forecast_condition
+    return Condition(fact_condition, forecast_condition)
 
 
-def get_wind_speed(weather: dict) -> (str, str):
+def get_wind_speed(weather: dict) -> WindSpeed:
     """
     Возвращает значение скорости ветра
     fact_wind - скорость ветра в настоящее время
     forecast_wind - прогноз скорости ветра в ближайшее время
 
     """   
-    fact_wind = str(weather['fact']['wind_speed'])
-    forecast_wind = str(weather['forecast']['parts'][0]['wind_speed'])
-    return fact_wind, forecast_wind
+    fact_wind_speed = str(weather['fact']['wind_speed'])
+    forecast_wind_speed = str(weather['forecast']['parts'][0]['wind_speed'])
+    return WindSpeed(fact_wind_speed, forecast_wind_speed)
 
 
 def get_forecast_part_name(weather: dict) -> str:
@@ -106,6 +112,27 @@ def get_forecast_part_name(weather: dict) -> str:
     """
     return RU_PART_NAME[weather['forecast']['parts'][0]['part_name']]
 
+def parse_weather(weather: dict, city_name: str) -> str:
+    temperature = get_tempereture(weather)
+    wind_speed = get_wind_speed(weather)
+    condition = get_condition(weather)
+    forecast_part_name = get_forecast_part_name(weather)
+    answer = f'Город: {city_name.capitalize()}. По данным Яндекс-Погода: \n\n' \
+        f'Температура воздуха: {temperature.fact_temperature}, {condition.fact_condition}\n' \
+        f'Скорость ветра: {wind_speed.fact_wind_speed} \n\n'\
+        '----------------\n\n' \
+        f'Прогноз погоды на {forecast_part_name}:\n' \
+        f'Температура воздуха: {temperature.forecast_temperature}, {condition.forecast_condition}\n' \
+        f'Скорость ветра: {wind_speed.forecast_wind_speed}'
+    return answer
+
+def print_api_error() -> str:
+    return 'Сервер недоступен. Попробуйте позже'
+
+def print_unknown_city_error() -> str:
+    return 'Информации о погоде в этом городе нет. \n\n' \
+            'Проверьте правильность написания названия города '\
+            'и повторите попытку снова. Например: Нижний Новгород'
 
 async def get_weather(city_name:str) -> str:
     """
@@ -117,25 +144,12 @@ async def get_weather(city_name:str) -> str:
     try:
         coordinates = get_city_coordinate(city_name)
     except UnknownCityException:
-        answer = 'Информации о погоде в этом городе нет. \n\n' \
-        'Проверьте правильность написания названия города '\
-        'и повторите попытку снова. Например: Нижний Новгород'
+        answer = print_unknown_city_error()
         coordinates = False
     if coordinates:
         try:
             weather = await get_weather_from_server(coordinates)
         except ServerErrorException:
-                answer = 'Сервер недоступен. Попробуйте позже'
-        fact_temperature, forecast_temperature = get_tempereture(weather)
-        fact_wind, forecast_wind = get_wind_speed(weather)
-        fact_condition, forecast_condition = get_condition(weather)
-        forecast_part_name = get_forecast_part_name(weather)
-        answer = f'Город: {city_name.capitalize()}. По данным Яндекс-Погода: \n\n' \
-            f'Температура воздуха: {fact_temperature}, {fact_condition}\n' \
-            f'Скорость ветра: {fact_wind} \n\n'\
-            '----------------\n\n' \
-            f'Прогноз погоды на {forecast_part_name}:\n' \
-            f'Температура воздуха: {forecast_temperature}, {forecast_condition}\n' \
-            f'Скорость ветра: {forecast_wind}' 
-         
+                answer =  print_api_error()
+        answer = parse_weather(weather, city_name) 
     return answer        
