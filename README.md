@@ -20,13 +20,15 @@ cd tg_weather_bot
 
 ### 2. Установите зависимости
 ```bash
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
 ### 3. Настройте переменные окружения
-Вставить необходимые токены в файл .env
+Вставить необходимые токены в файл .env (не забыть убрать .example)
 
 ##  Запуск бота
 ```bash
-python tg_bot.py
+python3 tg_bot.py
 ```
