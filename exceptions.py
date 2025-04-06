@@ -1,5 +1,5 @@
 class UnknownCityException(Exception):
-    """Для неизвестного города (если введеный пользователем город не содержится в city.json)"""
+    """Для неизвестного города (если введеный пользователем город не содержится в cities.json)"""
     pass
 
 class ServerErrorException(Exception):

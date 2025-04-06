@@ -1,12 +1,17 @@
 """
-Получение данных о погоде по API от Яндекс-Погода
+Получение данных о погоде по API от Яндекс-Погода.
 
+На момент написания комментария (апрель 2025) используется v2 версия API
+на тарифе "Погода на вашем сайте".
+
+В ответ на запрос приходит JSON. 
+Подробнее о формате на https://yandex.ru/dev/weather/doc/ru/concepts/forecast-info#resp-format
 """
 
 from aiohttp import ClientSession
 from typing import NamedTuple
 
-from settings import API_TOKEN_WEATHER  # Загрузка токена для запроса по API к Яндекс-Погода
+from settings import API_TOKEN_WEATHER, URL_API_YANDEX
 from city_name_parse import get_city_coordinate 
 from exceptions import ServerErrorException, UnknownCityException
 from city_name_parse import Coordinates
@@ -24,7 +29,7 @@ class WindSpeed(NamedTuple):
     fact_wind_speed: float
     forecast_wind_speed: float
 
-RU_CONDITION = {
+RU_CONDITIONS = {
     'clear': 'ясно',
     'partly-cloudy': 'малооблачно',
     'cloudy': 'облачно с прояснениями',
@@ -46,7 +51,7 @@ RU_CONDITION = {
     'thunderstorm-with-hail': 'гроза с градом'
 }
 
-RU_PART_NAME = {
+RU_PART_NAMES = {
     "night": "ночь",
     "day": "день",
     "evening": "вечер",
@@ -54,12 +59,12 @@ RU_PART_NAME = {
 }
 
 
-async def get_weather_from_server(Coordinates) -> dict:
+async def get_weather_from_server(coordinates: Coordinates) -> dict:
     """
     Возвращает данные о погоде в словаре weather
 
     """
-    url = f'https://api.weather.yandex.ru/v2/informers?lat={Coordinates.latitude}&lon={Coordinates.longitude}&extra=true&lang=ru_RU'
+    url = f'{URL_API_YANDEX}?lat={coordinates.latitude}&lon={coordinates.longitude}&extra=true&lang=ru_RU'
     headers = {'X-Yandex-API-Key': API_TOKEN_WEATHER}
     async with ClientSession() as session:
         async with session.get(url, headers=headers) as response:
@@ -69,7 +74,7 @@ async def get_weather_from_server(Coordinates) -> dict:
                 return await response.json()
 
 
-def get_tempereture(weather:dict) -> Temperature:
+def get_tempereture(weather: dict) -> Temperature:
     """
     Возвращает значение температуры 
     fact_temperature - температура воздуха в настоящее время
@@ -88,8 +93,8 @@ def get_condition(weather: dict) -> Condition:
     forecast_temperature - прогноз температуры погоды в ближайшее время
 
     """
-    fact_condition = RU_CONDITION[weather['fact']['condition']]
-    forecast_condition = RU_CONDITION[weather['forecast']['parts'][0]['condition']]
+    fact_condition = RU_CONDITIONS[weather['fact']['condition']]
+    forecast_condition = RU_CONDITIONS[weather['forecast']['parts'][0]['condition']]
     return Condition(fact_condition, forecast_condition)
 
 
@@ -110,7 +115,7 @@ def get_forecast_part_name(weather: dict) -> str:
     Возвращает строку с названием предстоящего времени суток (утро, день, вечер, ночь)
 
     """
-    return RU_PART_NAME[weather['forecast']['parts'][0]['part_name']]
+    return RU_PART_NAMES[weather['forecast']['parts'][0]['part_name']]
 
 def parse_weather(weather: dict, city_name: str) -> str:
     temperature = get_tempereture(weather)
@@ -126,30 +131,30 @@ def parse_weather(weather: dict, city_name: str) -> str:
         f'Скорость ветра: {wind_speed.forecast_wind_speed}'
     return answer
 
-def print_api_error() -> str:
+def get_api_error() -> str:
     return 'Сервер недоступен. Попробуйте позже'
 
-def print_unknown_city_error() -> str:
+def get_unknown_city_error() -> str:
     return 'Информации о погоде в этом городе нет. \n\n' \
             'Проверьте правильность написания названия города '\
             'и повторите попытку снова. Например: Нижний Новгород'
 
-async def get_weather(city_name:str) -> str:
+async def get_weather(city_name: str) -> str:
     """
     Формирует ответ пользователю. Если данные о погоде по введеному названию городу получены,
     то возвращается строка с данными о текущей погоде и прогнозе погоде. Если данных нет,
     то возращается строка с текстом об ошибке
     
     """
+    coordinates = None
     try:
         coordinates = get_city_coordinate(city_name)
     except UnknownCityException:
-        answer = print_unknown_city_error()
-        coordinates = False
+        answer = get_unknown_city_error()
     if coordinates:
         try:
             weather = await get_weather_from_server(coordinates)
+            answer = parse_weather(weather, city_name)
         except ServerErrorException:
-                answer =  print_api_error()
-        answer = parse_weather(weather, city_name) 
+            answer =  get_api_error() 
     return answer        

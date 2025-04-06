@@ -17,22 +17,22 @@ class Coordinates(NamedTuple):
 
 def load_cities() -> list:
     """
-    Загружает имена всех городов из city.json в массив citiesList, 
+    Загружает имена всех городов из cities.json в список cities, 
     элементы которых dict с данными о городах
     
     """
-    with open('city.json', encoding='utf-8') as f:
+    with open('cities.json', encoding='utf-8') as f:
         file_content = f.read()
-        cities_list = json.loads(file_content)
-        return cities_list
+        cities = json.loads(file_content)
+        return cities
 
 def get_city_coordinate(city_name: str) -> Coordinates:
     """
     Возвращает координаты  (lat,lon) or (None, None) по названию города
     
     """
-    citiesList = load_cities()
-    for city in citiesList:
+    cities = load_cities()
+    for city in cities:
         if city['city'].lower() == city_name.lower():
             return Coordinates(latitude=city['geo_lat'], longitude=city['geo_lon'])
     raise UnknownCityException
