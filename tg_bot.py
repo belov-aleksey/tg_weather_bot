@@ -7,9 +7,12 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
 from telegram.ext import filters, MessageHandler
 
+from loguru import logger
+
 from settings import API_TOKEN_TG
 from api_weather import get_weather
 
+logger.add('app.log',  format="{time} {level} {message}", level="INFO")
 
 async def print_weather(update: Update, context: ContextTypes.DEFAULT_TYPE):
     textMessage = await get_weather(update.message.text)
@@ -21,10 +24,11 @@ async def print_unknown_response(update: Update, context: ContextTypes.DEFAULT_T
 
 async def print_start_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Привет! Напиши мне название города,\
-     в котором хочешь узнать погоду. \n Пример: Москва")
+     в котором хочешь узнать погоду. \nПример: Москва")
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(API_TOKEN_TG).build()
+    logger.info('Токен бота получен')
 
     start_handler = CommandHandler('start', print_start_bot)
     weather_handler = MessageHandler(
@@ -35,4 +39,5 @@ if __name__ == '__main__':
     application.add_handler(weather_handler)
     application.add_handler(unknown_handler)
 
+    logger.info('Хэндлеры добавлены. Запуск бота...')
     application.run_polling()

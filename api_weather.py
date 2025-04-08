@@ -8,6 +8,8 @@
 Подробнее о формате на https://yandex.ru/dev/weather/doc/ru/concepts/forecast-info#resp-format
 """
 
+from loguru import logger
+
 from aiohttp import ClientSession
 from typing import NamedTuple
 
@@ -16,6 +18,7 @@ from city_name_parse import get_city_coordinate
 from exceptions import ServerErrorException, UnknownCityException
 from city_name_parse import Coordinates
 
+logger.add('app.log',  format="{time} {level} {message}", level="INFO")
 
 class Temperature(NamedTuple):
     fact_temperature: int
@@ -148,13 +151,20 @@ async def get_weather(city_name: str) -> str:
     """
     coordinates = None
     try:
+        logger.info(f'Начинаю поиск координат города {city_name}')
         coordinates = get_city_coordinate(city_name)
+        logger.info(f'Для города {city_name} найдены координаты: {coordinates.latitude}, {coordinates.longitude}')
     except UnknownCityException:
         answer = get_unknown_city_error()
+        logger.info(f'Неизвестный город {city_name}')
     if coordinates:
         try:
+            logger.info(f'Отправляю запрос на сервер по городу {city_name}')
             weather = await get_weather_from_server(coordinates)
+            logger.info(f'Данные по городу {city_name} получены')
             answer = parse_weather(weather, city_name)
+            logger.info(f'Сведения о погоде для города {city_name} сформированы')
         except ServerErrorException:
             answer =  get_api_error() 
+            logger.error(f'Сервер не дал ответ по городу {city_name}')
     return answer        
