@@ -15,7 +15,7 @@ from typing import NamedTuple
 
 from settings import API_TOKEN_WEATHER, URL_API_YANDEX
 from city_name_parse import get_city_coordinate 
-from exceptions import ServerErrorException, UnknownCityException
+from exceptions import ServerErrorException
 from city_name_parse import Coordinates
 
 logger.add('app.log',  format="{time} {level} {message}", level="INFO")
@@ -150,14 +150,16 @@ async def get_weather(city_name: str) -> str:
     
     """
     coordinates = None
-    try:
-        logger.info(f'Начинаю поиск координат города {city_name}')
-        coordinates = get_city_coordinate(city_name)
-        logger.info(f'Для города {city_name} найдены координаты: {coordinates.latitude}, {coordinates.longitude}')
-    except UnknownCityException:
+    logger.info(f'Начинаю поиск координат города {city_name}')
+
+    coordinates = get_city_coordinate(city_name)
+
+    if not coordinates:
         answer = get_unknown_city_error()
-        logger.info(f'Неизвестный город {city_name}')
-    if coordinates:
+        logger.info(f'Неизвестный город {city_name}')   
+    else:
+        logger.info(f'Для города {city_name} найдены координаты: {coordinates.latitude}, {coordinates.longitude}')
+
         try:
             logger.info(f'Отправляю запрос на сервер по городу {city_name}')
             weather = await get_weather_from_server(coordinates)
