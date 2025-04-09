@@ -14,21 +14,19 @@
 
 ### 1. Клонируйте репозиторий
 ```bash
-git clone git@github.com:belov-aleksey/tg_weather_bot.git
-cd tg_weather_bot
+git clone git@github.com:belov-aleksey/telegram-weather-bot.git
+cd telegram-weather-bot
 ```
 
 ### 2. Установите зависимости
 ```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+make install
 ```
 
 ### 3. Настройте переменные окружения
-Вставить необходимые токены в файл .env (не забыть убрать .example)
+Вставить необходимые токены в файл .env
 
 ##  Запуск бота
 ```bash
-python3 tg_bot.py
+make run
 ```
