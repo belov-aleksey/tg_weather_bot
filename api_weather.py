@@ -11,26 +11,13 @@
 from loguru import logger
 
 from aiohttp import ClientSession
-from typing import NamedTuple
 
+from db import get_city_coordinates 
+from exceptions import ServerErrorException
 from settings import API_TOKEN_WEATHER, URL_API_YANDEX
-from city_name_parse import get_city_coordinate 
-from exceptions import ServerErrorException, UnknownCityException
-from city_name_parse import Coordinates
+from models import Coordinates, Temperature, Condition, WindSpeed
 
 logger.add('app.log',  format="{time} {level} {message}", level="INFO")
-
-class Temperature(NamedTuple):
-    fact_temperature: int
-    forecast_temperature: int
-
-class Condition(NamedTuple):
-    fact_condition: str
-    forecast_condition: str
-
-class WindSpeed(NamedTuple):
-    fact_wind_speed: float
-    forecast_wind_speed: float
 
 RU_CONDITIONS = {
     'clear': 'ясно',
@@ -150,20 +137,21 @@ async def get_weather(city_name: str) -> str:
     
     """
     coordinates = None
-    try:
-        logger.info(f'Начинаю поиск координат города {city_name}')
-        coordinates = get_city_coordinate(city_name)
-        logger.info(f'Для города {city_name} найдены координаты: {coordinates.latitude}, {coordinates.longitude}')
-    except UnknownCityException:
+    logger.info(f'Начинаю поиск координат города {city_name}')
+
+    coordinates = get_city_coordinates(city_name)
+
+    if not coordinates:
         answer = get_unknown_city_error()
-        logger.info(f'Неизвестный город {city_name}')
-    if coordinates:
+        logger.info(f'Неизвестный город {city_name}')   
+    else:
+        logger.info(f'Для города {city_name} найдены координаты: {coordinates.latitude}, {coordinates.longitude}')
+
         try:
             logger.info(f'Отправляю запрос на сервер по городу {city_name}')
             weather = await get_weather_from_server(coordinates)
             logger.info(f'Данные по городу {city_name} получены')
             answer = parse_weather(weather, city_name)
-            logger.info(f'Сведения о погоде для города {city_name} сформированы')
         except ServerErrorException:
             answer =  get_api_error() 
             logger.error(f'Сервер не дал ответ по городу {city_name}')
