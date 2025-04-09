@@ -1,41 +1,28 @@
 """
-Модуль для парсинга названия города
+Модуль для получения координат города по его имени из базы данных `russian_cities.db`
 
 """
 
-import os
-import json
 import sqlite3
 
-from typing import NamedTuple, List, Optional
+from typing import Optional
 from loguru import logger
 
+from models import Coordinates
 from exceptions import DataBaseException
 
 logger.add('app.log',  format="{time} {level} {message}", level="INFO")
 
-class City(NamedTuple):
-    name: str
-    subject: str
-    district: str
-    population: int
-    lat: float
-    lon: float
+DB_FILE_NAME = 'russian_cities.db'
 
-class Coordinates(NamedTuple):
-    latitude: float
-    longitude: float
-
-
-def get_city_coordinate(city_name: str) -> Optional[Coordinates]:
+def get_city_coordinates(city_name: str) -> Optional[Coordinates]:
     """
     Возвращает координаты объект Coordinates или None 
     
     """
     try:
-        with sqlite3.connect('russian_cities.db') as con:
-            coordinates = None
-
+        coordinates = None
+        with sqlite3.connect(DB_FILE_NAME) as con:
             cursor = con.cursor()
             cursor.execute("""
                 SELECT lat, lon FROM cities 
